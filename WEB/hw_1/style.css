@@ -1,0 +1,26 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: darkred;
+    margin: 0;
+}
+
+.Login {
+    width: 100%;
+    max-width: 400px;
+    margin: 50px auto 0;
+    background: #aaa;
+    padding: 25px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+}
+
+.mh1 {
+    margin: auto;
+    width: 100%;
+    max-width: 100px;
+}
+
+.submit {
+    margin: auto;
+    width: 100%;
+    max-width: 200px;
+}
