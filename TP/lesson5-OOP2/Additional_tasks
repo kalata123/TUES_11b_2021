@@ -1,0 +1,20 @@
+1. Create a Student class which inherits class Person. 
+
+The Person class contains name  and
+instances of classes:
+address(city, street, number etc.)
+
+The Student class contains number in class  and
+instances of classes:
+markbook(like the  example)
+computer(mark, year of producing , cpu, os,  ram, disk ....)
+
+Create getters and setters.
+Create all the classes mentioned above.
+all  variables must be private! (__ prefixed)
+
+2. Design resarch OOP - Inheritance vs Composition.
+   Write short summery(512 symbbols max) when is recommended to use the first and when the second.
+   
+3. Coupling and cohesion -  general software design rule appicable for class design also.
+   Write short summery(512 symbbols max) of the most important thins that you learned.

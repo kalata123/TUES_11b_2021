@@ -1,0 +1,9 @@
+1. Create gtenerator of the prime numbers (similar like fibonacci)
+2. Implement in python the algorithm  that resolves the 
+100 floor building /2 egg problem described here:
+https://medium.com/@khopsickle/2-eggs-and-100-floors-a032beb77aaa
+
+By given number between 1 and 100  the the python script have to print
+all the steps(floor from which an egg is dropped)
+  - Bonus point - use generator
+  - Bonus point 2 - format in pep 8 and use classes.

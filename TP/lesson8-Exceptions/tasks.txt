@@ -1,0 +1,9 @@
+1. Create class Students which has dictionary with all(3 is enough for the example) the students in A class. 
+The class has a method "get_name" that returns student's name when is called with parameter student's number.
+Define "InvalidNumberException" rise it when get_name is called with non existing number.
+
+Make simple method calls that ilustrates the Class behaviour. 
+
+2. Exactly the same as #1, but instead of rsing of exception, return error code.
+
+3. Create comparison alaysis when aproach #1 is applicable and when #2.   
