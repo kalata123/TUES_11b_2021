@@ -74,7 +74,7 @@ class Race{
         }
 
         string getContestantStanding(){
-            stringstream s;
+            ostringstream s;
             for (int i = 0; i < this->contestants.size(); i++){
                 s << this->contestants[i].getName() << ": " << 
                      this->contestants[i].getDistance() << "(" << 
@@ -85,9 +85,12 @@ class Race{
 
         void simulateRace(int iteration_count){
             this->resetContestants();
+            cout << getContestantStanding() << endl;
+
             for (int i = 0; i < this->contestants.size(); i++){
                 this->contestants[i].calcDistance(iteration_count);
             }
+
             sort(this->contestants.begin(), this->contestants.end(), [](Contestant c1, Contestant c2) {return c1.getDistance() > c2.getDistance();});
             cout << getContestantStanding() << endl;
         }
