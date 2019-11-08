@@ -1,0 +1,3 @@
+1. Make sure that "pip" is acessible from command line
+2. Research /install/ https://virtualenv.pypa.io/en/latest/
+3. Create a python script that uses the prime numer generator (homework lesson 8) as module.
