@@ -37,25 +37,24 @@ def is_stronger(a, b):
     for i in range(len(set(b[1]))):
         # if they have the same ingredients, but A has less power
         if A[i][0] == B[i][0]:
-            if A[i][1] <= B[i][1]:
+            if A[i][1] < B[i][1]:
                 return False
     return True
+
+
+def least_stronger(a, lst):
+    return "sap"
 
 
 def strong_relation(lst):
     a = []
     for i in range(len(lst)):
         a.append((lst[i], []))
-        for j in range(i+1, len(lst)):
+        for j in range(len(lst)):
             if is_stronger(lst[j], lst[i]):
-                a[i][1].append(lst[j])
+                a[i][1].append(lst[j][0])
     return a
 
 
 if __name__ == '__main__':
-    # a = [[1], [7, 8], [1, 2, 3, 4], [4], ["random", "words"]]
-    # dct = group_by_f(len, a)
-    # print(dct.keys())
-    # print(dct.values())
-    # print(dct)
     pass

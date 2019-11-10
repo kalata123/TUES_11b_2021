@@ -7,7 +7,7 @@
 
 # За хората, които са си писали задачите в един файл ->
 from solution import group_by_f
-from solution import is_stronger#, least_stronger, strong_relation
+from solution import is_stronger, strong_relation#,least_stronger
 from solution import max_notes, leading
 # <--
 
@@ -96,15 +96,15 @@ class Testis_stronger(unittest.TestCase):
 #         self.assertEqual(least_stronger(medicine1, [medicine2, medicine3, medicine4]), expected_result)
 
 
-# class Teststrong_relation(unittest.TestCase):
-#     def test_function_when_result_must_be_list_of_tuples(self):
-#         medicine1 = ("medicine1", [("p", 5), ("q", 3)])
-#         medicine2 = ("medicine2", [("p", 4), ("q", 3)])
-#         medicine3 = ("medicine3", [("p", 3)])
+class Teststrong_relation(unittest.TestCase):
+    def test_function_when_result_must_be_list_of_tuples(self):
+        medicine1 = ("medicine1", [("p", 5), ("q", 3)])
+        medicine2 = ("medicine2", [("p", 4), ("q", 3)])
+        medicine3 = ("medicine3", [("p", 3)])
 
-#         expected_result = [(('medicine1', [('p', 5), ('q', 3)]), []), (('medicine2', [('p', 4), ('q', 3)]), ['medicine1']), (('medicine3', [('p', 3)]), ['medicine1', 'medicine2'])]
+        expected_result = [(('medicine1', [('p', 5), ('q', 3)]), []), (('medicine2', [('p', 4), ('q', 3)]), ['medicine1']), (('medicine3', [('p', 3)]), ['medicine1', 'medicine2'])]
 
-#         self.assertEqual(strong_relation([medicine1, medicine2, medicine3]), expected_result)
+        self.assertEqual(strong_relation([medicine1, medicine2, medicine3]), expected_result)
 
 
 class Testmax_notes(unittest.TestCase):
