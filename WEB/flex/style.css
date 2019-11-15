@@ -1,0 +1,20 @@
+body{
+    background: #aaa;
+    margin: 0;
+}
+
+.site-wrapper{
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+    background: white;
+}
+
+.site-header-inner{
+    padding: 20px;
+}
+
+.site-navigation {
+    background: #333;
+}
+
