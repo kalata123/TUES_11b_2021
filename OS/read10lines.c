@@ -8,13 +8,11 @@ int main(){
     char buff[200];
     int status;
     int nls = 0;
-    while ((status = read(fd, buff, 200)) != 0){
+    while ((status = read(fd, buff, 1)) != 0){
         int written = 0;
         while (written < status)
         {
-            for (int i = 0; i < 200; i++){
-                if (buff[i] == '\n') ++nls;
-            }
+            if (buff[0] == '\n') ++nls;
             written += write(fd, buff, status - written);
         }
         
