@@ -6,5 +6,5 @@ class BaseOBJ {
     public:
         BaseOBJ();
         BaseOBJ(int sth);
-}
+};
 #endif // !BASE_HH
