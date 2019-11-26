@@ -10,7 +10,6 @@ typedef struct {
 
 int main(int argc, char const *argv[])
 {
-    printf("%ld\n", sizeof(char));
     int w_fd = open(argv[1], O_RDONLY);
     int status;
     block_t bl;
