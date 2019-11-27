@@ -1,9 +1,10 @@
 <title>Posts</title>
 
-<a href="/posts/new">New Post</a>
-
+<a href="/posts/new">New post</a>
+<a href="/categories/new">New category</a>
 <h1>Posts</h1>
 {% for post in posts %}
-<a href="/posts/{{post.id}}"><b></b>Name:</b> {{ post.name }} | Author: {{ post.author }}</a>
+<a href="/posts/{{ post.id }}"><b>Name:</b> {{ post.name }} | Author: {{ post.author }}</a>
 <br/>
 {% endfor %}
+
