@@ -49,3 +49,4 @@ class Post:
         with DB() as db:
             values = db.execute('''SELECT name FROM category''').fetchall()
         return values
+as
