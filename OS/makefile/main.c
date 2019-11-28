@@ -10,21 +10,20 @@
 #define c_header " <==\n"
 
 void headers();
-void readStdIn(int count);
+void readStdIn();
 int myread_fd(int fd);
 void mywrite(int count, int fd, int flag);
 int myread_str(char *str);
 
 int main(int argc, char const *argv[])
 {
-    if (argc == 1) readStdIn(argc);
+    if (argc == 1) readStdIn();
     else {
         for (int i = 1; i < argc; ++i){
             if(i != 1) write(STDOUT_FILENO, "\n", 1); // writes \n before ==>
             if (atoi(argv[i]) == '-' ){
-                // read from stdinif (argc > 2){
                 if (argc > 2) headers(stdin_name); // puts headers
-                readStdIn(argc);
+                readStdIn();
             }
             else{
                 int fd;
@@ -46,16 +45,16 @@ void headers(char* str){
 }
 
 
-void readStdIn(int count){
+void readStdIn(){
     char buff;
     char str[256];
     int status = 0, i = 0, nls;
-    while ((status = read(STDIN_FILENO, &buff, 1) != 0))
+    while (read(STDIN_FILENO, &buff, 1) != 0)
     {
         str[i] = buff;
         i++;
     }
-    nls = myread_str(buff); // fails here
+    nls = myread_str(str); // fails here
     printf("%d\n", nls);
     write(STDOUT_FILENO, &buff, status);
     
