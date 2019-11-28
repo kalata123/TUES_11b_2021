@@ -17,11 +17,11 @@ int myread_str(char *str);
 
 int main(int argc, char const *argv[])
 {
-    if (argc == 1) readStdIn();
+    if (argc == 1) readStdIn(); // zero argvs
     else {
         for (int i = 1; i < argc; ++i){
             if(i != 1) write(STDOUT_FILENO, "\n", 1); // writes \n before ==>
-            if (atoi(argv[i]) == '-' ){
+            if (strcmp(argv[i], "-") == 0){
                 if (argc > 2) headers(stdin_name); // puts headers
                 readStdIn();
             }
@@ -47,17 +47,21 @@ void headers(char* str){
 
 void readStdIn(){
     char buff;
-    char str[256];
+    char str[256] = "\0";
     int status = 0, i = 0, nls;
-    while (read(STDIN_FILENO, &buff, 1) != 0)
+    while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
     {
-        str[i] = buff;
+        strcat(str, &buff);
+    };
+    nls = myread_str(str);
+    while (nls > 10){
+        if (str[i] == '\n') nls--;
         i++;
     }
-    nls = myread_str(str); // fails here
-    printf("%d\n", nls);
-    write(STDOUT_FILENO, &buff, status);
-    
+    while (i < strlen(str)){
+        write(STDOUT_FILENO, &str[i], 1);
+        i++;
+    }
 }
 
 

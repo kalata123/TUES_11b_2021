@@ -1,7 +1,10 @@
 SOURCES := ${wildcard sources/*.cc}
 
 main: all
-	g++ main.cc
+       g++ main.cc
 
 all: 
-	g++ -c ${SOURCES}
+       g++ -c ${SOURCES}
+
+clean:
+	rm -rvf *.o game

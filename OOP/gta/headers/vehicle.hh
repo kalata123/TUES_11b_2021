@@ -1,10 +1,12 @@
 #ifndef VEHICLE_HH
 #define VEHICLE_HH
-#include "entity.hh"
+
+#include "./entity.hh"
+
 class Vehicle : public Entity {
-    int sth;
-    public:
-        Vehicle();
-        Vehicle(int sth);
+protected:
+  float speed;
+  int seatCount;
 };
-#endif // !VEHICLE_HH
+
+#endif

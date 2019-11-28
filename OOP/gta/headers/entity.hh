@@ -1,10 +1,9 @@
 #ifndef ENTITY_HH
 #define ENTITY_HH
-#include "base.hh"
-class Entity  : public BaseOBJ{
-    int sth;
-    public:
-        Entity();
-        Entity(int sth);
+
+#include "./base_object.hh"
+
+class Entity : public BaseObject {
 };
-#endif // !ENTITY_HH
+
+#endif

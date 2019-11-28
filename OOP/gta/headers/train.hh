@@ -1,11 +1,9 @@
-#ifndef TRAIN_HH
-#define TRAIN_HH
-#include "land.hh"
-class Train : public Land{
-    int sth;
-    public:
-        Train();
-        Train(int sth);
+#ifndef CAR_HH
+#define CAR_HH
+
+#include "./land_vehicle.hh"
+
+class Train : public LandVehicle {
 };
 
-#endif // !TRAIN_HH
+#endif

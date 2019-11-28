@@ -1,10 +1,9 @@
 #ifndef PARTICLE_HH
 #define PARTICLE_HH
-#include "base.hh"
-class Particle  : public BaseOBJ{
-    int sth;
-    public:
-        Particle();
-        Particle(int sth);
+
+#include "./base_object.hh"
+
+class Particle : public BaseObject {
 };
-#endif // !PARTICLE_HH
+
+#endif

@@ -1,11 +1,9 @@
 #ifndef CAR_HH
 #define CAR_HH
-#include "land.hh"
-class Car : public Land{
-    int sth;
-    public:
-        Car();
-        Car(int sth);
+
+#include "./land_vehicle.hh"
+
+class Car : public LandVehicle {
 };
 
-#endif // !CAR_HH
+#endif
