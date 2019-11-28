@@ -52,9 +52,9 @@ void readStdIn(){
     while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
     {
         strcat(str, &buff);
-    };
+    }
     nls = myread_str(str);
-    while (nls > 10){
+    while (nls >= 10){
         if (str[i] == '\n') nls--;
         i++;
     }
