@@ -7,3 +7,4 @@ then u lseek and then you go to that place and start printing
 
 when having something like tail exec.c - exec.c -> the '-' means you  have to read from STDIN. 
 if you give less than 10 u just use ctrl+D
+

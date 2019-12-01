@@ -1,3 +1,13 @@
+//------------------------------------------------------------------------
+// NAME: Kaloyan Angelov
+// CLASS: XIb
+// NUMBER: 15
+// PROBLEM: #1
+// FILE NAME: main.c (unix file name)
+// FILE PURPOSE:
+// Implementing user command tail
+// Using only read/write
+//------------------------------------------------------------------------
 #include <sys/types.h>
 #include <unistd.h>
 #include "fcntl.h"
@@ -5,110 +15,115 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include "errno.h"
 #define stdin_name "standard input"
 #define o_header "==> "
 #define c_header " <==\n"
 
-void headers();
-void readStdIn();
-int myread_fd(int fd);
-void mywrite(int count, int fd, int flag);
-int myread_str(char *str);
+int workFromStdin(int argc, int flag){
 
-int main(int argc, char const *argv[])
-{
-    struct stat errs;    
-    if (argc == 1) readStdIn(); // zero argvs
-    else {
-        for (int i = 1; i < argc; ++i){
-            if (S_ISDIR(errs.st_mode)){
-                write(STDERR_FILENO, "tail: error reading '", 21);
-                write(STDERR_FILENO, argv[i], strlen(argv[i]));
-                write(STDERR_FILENO, "': Is a directory\n", 15);
-                perror("");
-                continue;
-            }
-            else if(stat(argv[i], &errs) != 0){
-                write(STDERR_FILENO, "tail: cannot open '", 21);
-                write(STDERR_FILENO, argv[i], strlen(argv[i]));
-                write(STDERR_FILENO, "' for reading:", 15);
-                perror("");
-                continue;
-            }
-            if(i != 1) write(STDOUT_FILENO, "\n", 1); // writes \n before ==>
-            if (strcmp(argv[i], "-") == 0){
-                if (argc > 2) headers(stdin_name); // puts headers
-                readStdIn();
-            }
-            else{
-                int fd;
-                if (argc > 2) headers(argv[i]); // puts headers
-                fd = open(argv[i], O_RDONLY);
-                mywrite(argc, fd, myread_fd(fd));
-                close(fd);
-            }
-        }
-    }
-    return 0;
 }
 
-
-void readStdIn(){
-    char buff;
-    char str[256] = "\0";
-    int status = 0, i = 0, nls;
-    while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
-    {
-        strcat(str, &buff);
-    }
-    nls = myread_str(str);
-    while (nls >= 10){
-        if (str[i] == '\n') nls--;
-        i++;
-    }
-    while (i < strlen(str)){
-        write(STDOUT_FILENO, &str[i], 1);
-        i++;
-    }
-}
-
-
-void mywrite(int count, int fd, int flag){
-    char buff;
-    int status = 0;
-    lseek(fd, 0, SEEK_SET);
-    while(flag >= 11){ // goes in if only flag > 10
-        read(fd, &buff, 1);
-        if (buff == '\n') flag--;
-    }
-    while ((status = read(fd, &buff, 1)) != 0){ // writes everything left
-        write(STDOUT_FILENO, &buff, status);
-    }
-}
-
-
-void headers(char* str){
+void headers(const char* str){
     write(STDOUT_FILENO, o_header, strlen(o_header));
     write(STDOUT_FILENO, str, strlen(str));
     write(STDOUT_FILENO, c_header, strlen(c_header));
 }
 
+int handle_error(char error, const char *name){
+    switch (error){
+        case 'r':
+            /* read err */
 
-int myread_str(char *str){
-    int nls = 0, len = strlen(str);
-    for (int i = 0; i < len; i++){
-        if (str[i] == '\n') nls ++;
+            return 0;
+        case 'w':
+            /* write err */
+            return 0;
+        case 'c':
+            /* close err */
+            return 0;
+        case 'o':
+
+            /* open err */
+            return 0;
+
+        default:
+            break;
+    }
+}
+
+int newLines(int fd, const char *name){
+    int nls = 0, status_r;
+    char buff;
+    lseek(fd, 0, SEEK_SET);
+    while((status_r = read(fd, &buff, 1)) != 0){ // read
+        if (status_r == -1){ // error occured
+            handle_error('r', name);
+            return -1;
+        }
+        if (buff == '\n') nls++;
     }
     return nls;
 }
 
-
-int myread_fd(int fd){
+int workFromFile(int argc, const char *string, int flag){
+    int fd, nls, status_r, status_w, status_o;
     char buff;
-    int status = -1;
-    int nls = 0;
-    while (read(fd, &buff, 1) != 0) if (buff == '\n') nls++; // counts \n
-    // printf("\n--myread_fd nl:\n%d is flag nl:", nls);
-    if (nls <= 10) return -1; // 10 or less lines
-    return nls; // more than 10 lines
+    fd = open(string, O_RDONLY);
+    // lseek(fd, 0, SEEK_SET);
+    // if (fd == -1) return handle_error('o', string); //open err
+    if (flag > 1) write(STDOUT_FILENO, "\n", 1);/*print \n*/;
+    if (argc > 1) headers(string)/*put header*/;
+
+    /*Logic{*/
+    nls = newLines(fd, string);  //count \n
+    lseek(fd, 0, SEEK_SET); // set read to the beginning
+    if (nls == -1) { // some error during \n counting
+        return 0;
+    }
+    else if (nls <= 10){
+        //start reading
+        while((status_r = read(fd, &buff, 1)) != 0){ // read
+            // if (status_r == -1) return handle_error('r', string); // read err
+            //write everything
+            status_w = write(STDOUT_FILENO, &buff, status_r);
+            // if (status_w == -1) return handle_error('w', string); // write err
+        }
+    }else {
+        //start reading
+        while(nls >= 11){ // read
+            status_r = read(fd, &buff, 1);
+            // if (status_r == -1) return handle_error('r', string); // read err
+            if (buff == '\n') nls--;
+            /*Check for close error - return -1*/
+        }
+        while (status_r = read(fd, &buff, 1) != 0){
+            // if (status_r == -1) return handle_error('r', string); // read err
+            status_w = write(STDOUT_FILENO, &buff, status_r);
+            // if (status_w == -1) return handle_error('w', string); // write err
+        }
+    }
+    /*}Logic*/
+    fd = close(fd);
+    // if (fd == -1) return handle_error('c', string); // close err
+    return 1;
+}
+
+int main(int argc, char const *argv[])
+{
+    int result;
+    if (argc == 1){
+        //read from stdin
+        return 0;
+    }
+    for (int i = 1; i < argc; ++i){
+        if (!strcmp(argv[i],"-")) {
+            //read from stdin
+        }else{
+            result = workFromFile(argc, argv[i], i);
+            // if result is -1 => an error occured 
+            if (!result) continue;
+        }
+    }
+    return 0;
 }
