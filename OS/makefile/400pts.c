@@ -74,8 +74,8 @@ void readStdIn(){
     {
         str = (char*)realloc(str, sizeof(char) * strlen(str)+1);// seems it is not working for seq 1 10000
         strcat(str, &buff);
+        if (buff == '\0') nls++;
     }
-    nls = myread_str(str);
     while (nls >= 11){
         if (str[i] == '\n') nls--;
         i++;
