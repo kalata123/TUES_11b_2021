@@ -20,36 +20,104 @@
 #define o_header "==> "
 #define c_header " <==\n"
 
-int workFromStdin(int argc, int flag){
+#define err_open_1 "tail: cannot open '"
+#define err_open_2 "' for reading"
 
-}
+#define err_read_1 "tail: error reading '"
+#define err_read_2 "'"
 
-void headers(const char* str){
-    write(STDOUT_FILENO, o_header, strlen(o_header));
-    write(STDOUT_FILENO, str, strlen(str));
-    write(STDOUT_FILENO, c_header, strlen(c_header));
-}
+#define err_write_1 "tail: error writing '"
+#define err_write_2 "'"
+
+#define err_close_1 "tail: error reading '"
+#define err_close_2 "': Input/output error\n"
+
+int err = 0;
 
 int handle_error(char error, const char *name){
+    char msg[200] = "\0";
     switch (error){
         case 'r':
             /* read err */
-
+            strcat(msg, err_read_1);
+            strcat(msg, name);
+            strcat(msg, err_read_2);
+            perror(msg);
+            err = 1;
             return 0;
+            break;
         case 'w':
             /* write err */
+            strcat(msg, err_write_1);
+            strcat(msg, name);
+            strcat(msg, err_write_2);
+            perror(msg);
+            err = 1;
             return 0;
+            break;
         case 'c':
             /* close err */
+            write(STDERR_FILENO, err_close_1, strlen(err_close_1));
+            write(STDERR_FILENO, name, strlen(name));
+            write(STDERR_FILENO, err_close_2, strlen(err_close_2));
+            err = 1;
             return 0;
+            break;
         case 'o':
-
             /* open err */
+            strcat(msg, err_open_1);
+            strcat(msg, name);
+            strcat(msg, err_open_2);
+            perror(msg);
+            err = 1;
             return 0;
+            break;
 
         default:
             break;
     }
+}
+
+int headers(const char* str){
+    int status;
+    status = write(STDOUT_FILENO, o_header, strlen(o_header));
+    if (status == -1) return handle_error('w', str);
+    write(STDOUT_FILENO, str, strlen(str));
+    if (status == -1) return handle_error('w', str);
+    write(STDOUT_FILENO, c_header, strlen(c_header));
+    if (status == -1) return handle_error('w', str);
+    return 1;
+}
+
+int workFromStdin(int argc, const char *name, int flag){
+    // char *str = (char*)malloc(sizeof(char));
+    char str[5000] = "\0";
+    char buff;
+    int status = 0, nls = 0, i = 0;
+    if (flag > 1 && err != 1) write(STDOUT_FILENO, "\n", 1);
+    if (argc > 2) headers(name);
+    while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
+    {
+        if (status == -1) return handle_error('r', name);
+        // str = (char*)realloc(str, sizeof(char) * strlen(str)+1);
+        strcat(str, &buff);
+    }
+    //char str[0] = "\0";
+    // str[0] = '\0';
+    for (i = 0; i < strlen(str); ++i) if (str[i] == '\n') nls++;
+    for (i = 0; nls >= 11; ++i){
+        if (str[i] == '\n') nls--;
+    }
+    for (int tmp = strlen(str), er = 0; i < tmp; ++i){
+        while (1)
+        {
+            status = write(STDOUT_FILENO, &str[i], 1);
+            if (status == -1) return handle_error('w', name);
+            if (status != 0) break;
+        }
+    }
+    err = 0;
+    // free(str);
 }
 
 int newLines(int fd, const char *name){
@@ -67,13 +135,13 @@ int newLines(int fd, const char *name){
 }
 
 int workFromFile(int argc, const char *string, int flag){
-    int fd, nls, status_r, status_w, status_o;
+    int fd, nls, status_r = 0, status_w, status_o;
     char buff;
     fd = open(string, O_RDONLY);
-    // lseek(fd, 0, SEEK_SET);
-    // if (fd == -1) return handle_error('o', string); //open err
-    if (flag > 1) write(STDOUT_FILENO, "\n", 1);/*print \n*/;
-    if (argc > 1) headers(string)/*put header*/;
+    if (fd == -1) return handle_error('o', string); //open err
+    if (flag > 1 && err == 0) status_w = write(STDOUT_FILENO, "\n", 1);
+    if (status_w == -1) return handle_error('w', string); //open err
+    if (argc > 2) headers(string);
 
     /*Logic{*/
     nls = newLines(fd, string);  //count \n
@@ -81,31 +149,28 @@ int workFromFile(int argc, const char *string, int flag){
     if (nls == -1) { // some error during \n counting
         return 0;
     }
-    else if (nls <= 10){
-        //start reading
-        while((status_r = read(fd, &buff, 1)) != 0){ // read
-            // if (status_r == -1) return handle_error('r', string); // read err
-            //write everything
-            status_w = write(STDOUT_FILENO, &buff, status_r);
-            // if (status_w == -1) return handle_error('w', string); // write err
-        }
-    }else {
-        //start reading
+    else{
         while(nls >= 11){ // read
             status_r = read(fd, &buff, 1);
-            // if (status_r == -1) return handle_error('r', string); // read err
+            if (status_r == -1) return handle_error('r', string); // read err
             if (buff == '\n') nls--;
-            /*Check for close error - return -1*/
         }
-        while (status_r = read(fd, &buff, 1) != 0){
-            // if (status_r == -1) return handle_error('r', string); // read err
-            status_w = write(STDOUT_FILENO, &buff, status_r);
-            // if (status_w == -1) return handle_error('w', string); // write err
+
+        while ((status_r = read(fd, &buff, 1)) != 0){
+            if (status_r == -1) return handle_error('r', string); // read err
+            while (1)
+            {
+                status_w = write(STDOUT_FILENO, &buff, status_r);
+                if (status_w != 0) break;
+            }
+            
+            if (status_w == -1) return handle_error('w', string); // write err
         }
+        err = 0;
     }
     /*}Logic*/
-    fd = close(fd);
-    // if (fd == -1) return handle_error('c', string); // close err
+    status_o = close(fd);
+    if (status_o == -1) return handle_error('c', string); // close err
     return 1;
 }
 
@@ -114,15 +179,17 @@ int main(int argc, char const *argv[])
     int result;
     if (argc == 1){
         //read from stdin
+        workFromStdin(argc, stdin_name, 1);
         return 0;
     }
     for (int i = 1; i < argc; ++i){
         if (!strcmp(argv[i],"-")) {
             //read from stdin
+            workFromStdin(argc, stdin_name, i);
+            continue;
         }else{
             result = workFromFile(argc, argv[i], i);
-            // if result is -1 => an error occured 
-            if (!result) continue;
+            if (result == 0) continue;
         }
     }
     return 0;
