@@ -35,6 +35,13 @@
 int err = 0;
 
 int handle_error(char error, const char *name){
+    //------------------------------------------------------------------------
+    // FUNCTION: handle_error
+    // Deals with errors
+    // PARAMETERS:
+    // error - char used to show the kind of error
+    // namе - the name of the file - used when printing the errors
+    //------------------------------------------------------------------------
     char msg[200] = "\0";
     switch (error){
         case 'r':
@@ -78,32 +85,44 @@ int handle_error(char error, const char *name){
     }
 }
 
-int headers(const char* str){
+int putHeader(const char* name){
+    //------------------------------------------------------------------------
+    // FUNCTION: putHeader
+    // it's writing the headers before the actual output
+    // PARAMETERS:
+    // name - the name of the file - used in the header and in error handling
+    //------------------------------------------------------------------------
     int status;
     status = write(STDOUT_FILENO, o_header, strlen(o_header));
-    if (status == -1) return handle_error('w', str);
-    write(STDOUT_FILENO, str, strlen(str));
-    if (status == -1) return handle_error('w', str);
+    if (status == -1) return handle_error('w', name);
+    write(STDOUT_FILENO, name, strlen(name));
+    if (status == -1) return handle_error('w', name);
     write(STDOUT_FILENO, c_header, strlen(c_header));
-    if (status == -1) return handle_error('w', str);
+    if (status == -1) return handle_error('w', name);
     return 1;
 }
 
 int workFromStdin(int argc, const char *name, int flag){
-    // char *str = (char*)malloc(sizeof(char));
-    char str[5000] = "\0";
+    //------------------------------------------------------------------------
+    // FUNCTION: workFromStdin
+    // it does all the logic behind working from stdin
+    // PARAMETERS:
+    // argc - integer - used when putting headers
+    // name - the name of the file - used in the header and in error handling
+    // flag - integer - used when for the correct output 
+    //------------------------------------------------------------------------
+    char *str = (char*)malloc(sizeof(char)); // with valgrind gives some errors
+    // char str[5000] = "\0";
     char buff;
     int status = 0, nls = 0, i = 0;
     if (flag > 1 && err != 1) write(STDOUT_FILENO, "\n", 1);
-    if (argc > 2) headers(name);
+    if (argc > 2) putHeader(name);
     while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
     {
         if (status == -1) return handle_error('r', name);
-        // str = (char*)realloc(str, sizeof(char) * strlen(str)+1);
+        str = (char*)realloc(str, sizeof(char) * strlen(str)+1);
         strcat(str, &buff);
     }
-    //char str[0] = "\0";
-    // str[0] = '\0';
     for (i = 0; i < strlen(str); ++i) if (str[i] == '\n') nls++;
     for (i = 0; nls >= 11; ++i){
         if (str[i] == '\n') nls--;
@@ -117,10 +136,17 @@ int workFromStdin(int argc, const char *name, int flag){
         }
     }
     err = 0;
-    // free(str);
+    free(str);
 }
 
 int newLines(int fd, const char *name){
+    //------------------------------------------------------------------------
+    // FUNCTION: newLines
+    // Counts the new lines using file descriptor
+    // PARAMETERS:
+    // fd - integer - used for reading
+    // name - the name of the file - used  in error handling
+    //------------------------------------------------------------------------
     int nls = 0, status_r;
     char buff;
     lseek(fd, 0, SEEK_SET);
@@ -135,13 +161,21 @@ int newLines(int fd, const char *name){
 }
 
 int workFromFile(int argc, const char *string, int flag){
+    //------------------------------------------------------------------------
+    // FUNCTION: workFromFile
+    // it does all the logic behind working from file
+    // PARAMETERS:
+    // argc - integer - used when putting headers
+    // name - the name of the file - used in the header and in error handling
+    // flag - integer - used when for the correct output 
+    //------------------------------------------------------------------------
     int fd, nls, status_r = 0, status_w, status_o;
     char buff;
     fd = open(string, O_RDONLY);
     if (fd == -1) return handle_error('o', string); //open err
     if (flag > 1 && err == 0) status_w = write(STDOUT_FILENO, "\n", 1);
     if (status_w == -1) return handle_error('w', string); //open err
-    if (argc > 2) headers(string);
+    if (argc > 2) putHeader(string);
 
     /*Logic{*/
     nls = newLines(fd, string);  //count \n
@@ -174,8 +208,14 @@ int workFromFile(int argc, const char *string, int flag){
     return 1;
 }
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]){
+    //------------------------------------------------------------------------
+    // FUNCTION: main
+    // it's the trigger of the real work
+    // PARAMETERS:
+    // argc - integer - count of argv
+    // argv - all console arguments
+    //------------------------------------------------------------------------
     int result;
     if (argc == 1){
         //read from stdin
