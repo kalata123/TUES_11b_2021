@@ -14,7 +14,9 @@ int main(int argc, char *argv[]) {
     while (1)
     {
         char * str = (char *)malloc(sizeof(char));
+        // char ** res;
         printf("$ ");
+
         do{
             c = fgetc(stdin);
             if (c == -1 || c == '\n') break;
@@ -25,42 +27,71 @@ int main(int argc, char *argv[]) {
         } while (c != '\n');
         if (c == -1) break;
         str[strlen(str)] = '\0';
-        printf("%s\n", str);
-        char **give = parse_cmdline(str);
+        printf("---%s---\n", str);
+    //-----
+        char ** res = NULL;
+        char *tmp;
+        const char key[2] = " ";
+        // char myString[strlen(str)];
+        // strcpy(myString, str);
+        // printf("%s\n%s\n", myString, str);
+        tmp = strtok(str, key);
+        int j = 0;
+        while (tmp != NULL)
+        {
+            res = realloc(res, sizeof(char *)*(j+1));
+            res[j] = tmp;
+            j++;
+            tmp = strtok(NULL, key);
+        }
+        res = realloc(res, sizeof(char*)*(j+1));
+        res[j] = NULL;
+        // res = parse_cmdline(str);
+        // printf("--|%s|--\n", res[0]);
+    //-----
+
         pid = fork();
         if (pid < 0){
             perror("fork");
         }else if (pid == 0){
-            if(execvp(argv[1], &argv[1]) == -1){
-                perror(argv[1]);
+            if(execvp(res[0], &res[1]) == -1){
+                // perror(res[0]);
+                free(*res);
+                free(str);
+                free(res);
                 exit(-1);
             }
         }else
         {
             if (waitpid(pid, &status, 0) != pid){
                 perror("");
-                exit(-1);
             }
         }
         free(str);
+        free(*res);
+        free(res);
     }
     return 0;
 }
-char** parse_cmdline(const char* cmdline){
-    char ** res = (char **) malloc(sizeof(char**));
-    char tmp[200] = "\0";
-    for (int i = 0, j = 0; i < strlen(cmdline); ++i, ++j){
-        while (cmdline[i] != ' ')
-        {
-            tmp[strlen(tmp)] = cmdline[i];
-            ++i;
-            if (strlen(cmdline) <= i) break;
-        }
-        res = (char **)realloc(res, sizeof(char**)*(strlen(tmp)));
-        strcpy(res[j], tmp);
-        tmp[0] = '\0';
+
+char** parse_cmdline( const char* cmdline ){
+    char ** res = NULL;
+    char *tmp;
+    const char key[2] = " ";
+    char myString[strlen(cmdline)];
+    strcpy(myString, cmdline);
+    printf("%s\n%s\n", myString, cmdline);
+    tmp = strtok(myString, key);
+    int j = 0;
+    while (tmp != NULL)
+    {
+        res = realloc(res, sizeof(char *)*(j+1));
+        res[j] = tmp;
+        j++;
+        tmp = strtok(NULL, key);
     }
+    res = realloc(res, sizeof(char*)*(j+1));
+    res[j] = NULL;
+    printf("res|%s|\n",res[0]);
     return res;
-    free(*res);
-    free(res);
 }
