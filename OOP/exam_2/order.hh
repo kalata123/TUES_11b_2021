@@ -5,18 +5,19 @@
 #include "clients.hh"
 #include "string"
 #include "vector"
+#include "car.hh"
 using std::string;
 
 class Order{
     private:
-        int ord_count = 0;
-        string number;
         Clients client;
         Car car;
         Uslugi usluga;
         vector<Parts> parts;
-        string vehicle;
+        int ord_count = 0;
         int finalPrice;
+        string number;
+        string vehicle;
         string status;
     public:
         Order(){};

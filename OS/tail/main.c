@@ -117,16 +117,19 @@ int workFromStdin(int argc, const char *name, int flag){
     int status = 0, nls = 0, i = 0;
     if (flag > 1 && err != 1) write(STDOUT_FILENO, "\n", 1);
     if (argc > 2) putHeader(name);
+
     while ((status = read(STDIN_FILENO, &buff, 1)) != 0)
     {
         if (status == -1) return handle_error('r', name);
         str = (char*)realloc(str, sizeof(char) * strlen(str)+1);
         strcat(str, &buff);
     }
+//   str = "kalata\nDari\ntues"
     for (i = 0; i < strlen(str); ++i) if (str[i] == '\n') nls++;
     for (i = 0; nls >= 11; ++i){
         if (str[i] == '\n') nls--;
     }
+// i = 100
     for (int tmp = strlen(str), er = 0; i < tmp; ++i){
         while (1)
         {
