@@ -5,6 +5,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+int spcs = 0;
+
 char** parse_cmdline( const char* cmdline );
 
 int main(int argc, char *argv[]) {
@@ -13,34 +15,36 @@ int main(int argc, char *argv[]) {
     int status = 0;
     while (1)
     {
-        int j = 0;
-        char ** res = malloc(sizeof(char**));
         char *tmp;
         const char key[2] = " ";
         char * str = (char *)malloc(sizeof(char));
-        // char ** res;
         printf("$ ");
 
         do{
             c = fgetc(stdin);
             if (c == -1 || c == '\n') break;
             else{
+                if (c == ' ') spcs++;
                 str[strlen(str)] = c;
                 str = (char *)realloc(str, sizeof(char) *(strlen(str)+1));
             }
         } while (c != '\n');
         if (c == -1) break;
         str[strlen(str)] = '\0';
+
+        char ** res = malloc(sizeof(char*)*spcs);
+
+        int j = 0;
         tmp = strtok(str, key);
         while (tmp != NULL)
         {
-            res = realloc(res, sizeof(char *)*(j+1));
+            res[j] = realloc(res, sizeof(char *)*strlen(tmp));
             res[j] = tmp;
             j++;
             tmp = strtok(NULL, key);
         }
-        res = realloc(res, sizeof(char*)*(j+1));
-        res[j] = NULL;
+        // res = realloc(res, sizeof(char*)*spcs);
+        // res[j] = NULL;
 
         pid = fork();
         if (pid < 0){
@@ -61,8 +65,9 @@ int main(int argc, char *argv[]) {
                 perror("");
             }
         }
+
         free(str);
-        // free(res[j]);
+        free(res[j]);
         free(res);
     }
     return 0;
