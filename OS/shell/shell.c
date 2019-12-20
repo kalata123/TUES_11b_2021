@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     while (1)
     {
         int j = 0;
-        char ** res = malloc(sizeof(char**));
+        char ** res = malloc(sizeof(char*));
         char *tmp;
         const char key[2] = " ";
         char * str = (char *)malloc(sizeof(char));
@@ -26,21 +26,21 @@ int main(int argc, char *argv[]) {
             if (c == -1 || c == '\n') break;
             else{
                 str[strlen(str)] = c;
-                str = (char *)realloc(str, sizeof(char) *(strlen(str)+1));
+                str = (char *)realloc(str, sizeof(char *) *(strlen(str)+1));
             }
         } while (c != '\n');
         if (c == -1) break;
         str[strlen(str)] = '\0';
-        tmp = strtok(str, key);
-        while (tmp != NULL)
-        {
-            res = realloc(res, sizeof(char *)*(j+1));
-            res[j] = tmp;
-            j++;
-            tmp = strtok(NULL, key);
-        }
-        res = realloc(res, sizeof(char*)*(j+1));
-        res[j] = NULL;
+        // tmp = strtok(str, key);
+        // while (tmp != NULL)
+        // {
+        //     res = realloc(res, sizeof(char *)*(j+1));
+        //     res[j] = tmp;
+        //     j++;
+        //     tmp = strtok(NULL, key);
+        // }
+        // res = realloc(res, sizeof(char*)*(j+1));
+        // res[j] = NULL;
 
         pid = fork();
         if (pid < 0){
@@ -62,30 +62,34 @@ int main(int argc, char *argv[]) {
             }
         }
         free(str);
-        // free(res[j]);
+        for (int i = 0; res[i] != NULL; i++){
+            printf("huehue\n");
+            free(res[i]);
+        }
         free(res);
     }
     return 0;
 }
 
 char** parse_cmdline( const char* cmdline ){
-//     char ** res = NULL;
-//     char *tmp;
-//     const char key[2] = " ";
-//     char myString[strlen(cmdline)];
-//     strcpy(myString, cmdline);
-//     printf("%s\n%s\n", myString, cmdline);
-//     tmp = strtok(myString, key);
-//     int j = 0;
-//     while (tmp != NULL)
-//     {
-//         res = realloc(res, sizeof(char *)*(j+1));
-//         res[j] = tmp;
-//         j++;
-//         tmp = strtok(NULL, key);
-//     }
-//     res = realloc(res, sizeof(char*)*(j+1));
-//     res[j] = NULL;
-//     printf("res|%s|\n",res[0]);
-//     return res;
+    // char ** res = NULL;
+    char *tmp;
+    const char key[2] = " ";
+    char *res[20] = "\0";
+    char myString[strlen(cmdline)];
+    strcpy(myString, cmdline);
+    printf("%s\n%s\n", myString, cmdline);
+    tmp = strtok(cmdline, key);
+    int j = 0;
+    while (tmp != NULL)
+    {
+        // res = realloc(res, sizeof(char *) * (j+1));
+        res[j] = tmp;
+        j++;
+        tmp = strtok(NULL, key);
+    }
+    res = realloc(res, sizeof(char*)*(j+1));
+    res[j] = NULL;
+    printf("res|%s|\n",res[0]);
+    return res;
 }
