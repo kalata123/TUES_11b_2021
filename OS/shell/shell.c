@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
     int status = 0;
     while (1)
     {
-        int j = 0;
         char ** res = malloc(sizeof(char*));
+        int j = 0;
         char *tmp;
         const char key[2] = " ";
         char * str = (char *)malloc(sizeof(char));
@@ -26,21 +26,12 @@ int main(int argc, char *argv[]) {
             if (c == -1 || c == '\n') break;
             else{
                 str[strlen(str)] = c;
+                if (c == ' ') j++;
                 str = (char *)realloc(str, sizeof(char *) *(strlen(str)+1));
             }
         } while (c != '\n');
         if (c == -1) break;
         str[strlen(str)] = '\0';
-        // tmp = strtok(str, key);
-        // while (tmp != NULL)
-        // {
-        //     res = realloc(res, sizeof(char *)*(j+1));
-        //     res[j] = tmp;
-        //     j++;
-        //     tmp = strtok(NULL, key);
-        // }
-        // res = realloc(res, sizeof(char*)*(j+1));
-        // res[j] = NULL;
 
         pid = fork();
         if (pid < 0){
@@ -55,12 +46,12 @@ int main(int argc, char *argv[]) {
                 // free(*res);
                 exit(-1);
             }
-        }else
-        {
+        }else{
             if (waitpid(pid, &status, 0) != pid){
                 perror("");
             }
         }
+
         free(str);
         for (int i = 0; res[i] != NULL; i++){
             printf("huehue\n");
@@ -72,24 +63,16 @@ int main(int argc, char *argv[]) {
 }
 
 char** parse_cmdline( const char* cmdline ){
-    // char ** res = NULL;
-    char *tmp;
-    const char key[2] = " ";
-    char *res[20] = "\0";
-    char myString[strlen(cmdline)];
-    strcpy(myString, cmdline);
-    printf("%s\n%s\n", myString, cmdline);
-    tmp = strtok(cmdline, key);
+    char ** res = NULL;
     int j = 0;
+    tmp = strtok(cmdline, " ");
     while (tmp != NULL)
     {
-        // res = realloc(res, sizeof(char *) * (j+1));
+        res = realloc(res, sizeof(char *)*(j+1));
         res[j] = tmp;
         j++;
-        tmp = strtok(NULL, key);
+        tmp = strtok(NULL, " ");
     }
     res = realloc(res, sizeof(char*)*(j+1));
     res[j] = NULL;
-    printf("res|%s|\n",res[0]);
-    return res;
 }
