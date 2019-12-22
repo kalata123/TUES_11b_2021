@@ -5,6 +5,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+int spcs = 0;
+
 char** parse_cmdline( const char* cmdline );
 
 int main(int argc, char *argv[]) {
@@ -18,13 +20,13 @@ int main(int argc, char *argv[]) {
         char *tmp;
         const char key[2] = " ";
         char * str = (char *)malloc(sizeof(char));
-        // char ** res;
         printf("$ ");
 
         do{
             c = fgetc(stdin);
             if (c == -1 || c == '\n') break;
             else{
+                if (c == ' ') spcs++;
                 str[strlen(str)] = c;
                 if (c == ' ') j++;
                 str = (char *)realloc(str, sizeof(char *) *(strlen(str)+1));
@@ -54,7 +56,6 @@ int main(int argc, char *argv[]) {
 
         free(str);
         for (int i = 0; res[i] != NULL; i++){
-            printf("huehue\n");
             free(res[i]);
         }
         free(res);
