@@ -23,11 +23,9 @@ char** parse_cmdline( const char* cmdline ){
     char *tmp;
     while (val != NULL){
         array[i] = malloc(sizeof(char *) * strlen(val));
-        // write(STDOUT_FILENO, "\n", 1);
         printf("%ld\n", sizeof(val));
         write(STDOUT_FILENO, val, strlen(val));
         array[i] = val;
-        // write(STDOUT_FILENO, "\n", 1);
         printf("%ld\n", sizeof(array[i]));
         write(STDOUT_FILENO, array[i], strlen(array[i]));
         write(STDOUT_FILENO, "\n", 1);
