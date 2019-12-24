@@ -30,18 +30,26 @@ class TicTacToeBoard:
                 self.board[j+str(i)] = " "
 
     def __str__(self):
-        lst = "\n  -------------\n"
-        for i in [3, 2, 1]:
-            lst += "{i} | {a} | {b} | {c} |\n".format(
-                    i=i,
-                    a=self.board["A" + str(i)],
-                    b=self.board["B" + str(i)],
-                    c=self.board["C" + str(i)])
-            lst += "  -------------\n"
-        lst += "    A   B   C  \n"
+        lst = '\n  -------------\n' +\
+            '3 | {a3} | {b3} | {c3} |\n'.format(
+                    a3=self.board["A3"],
+                    b3=self.board["B3"],
+                    c3=self.board["C3"]) +\
+            '  -------------\n' +\
+            '2 | {a2} | {b2} | {c2} |\n'.format(
+                    a2=self.board["A2"],
+                    b2=self.board["B2"],
+                    c2=self.board["C2"]) +\
+            '  -------------\n' +\
+            '1 | {a1} | {b1} | {c1} |\n'.format(
+                    a1=self.board["A1"],
+                    b1=self.board["B1"],
+                    c1=self.board["C1"]) +\
+            '  -------------\n' +\
+            '    A   B   C  \n'
         return lst
 
-    def check_cols(self):
+    def __which_col(self):
         for i in ["A", "B", "C"]:
             if (
                 self.board[i + "1"] ==
@@ -52,7 +60,7 @@ class TicTacToeBoard:
                 return i
         return None
 
-    def check_rows(self):
+    def __which_row(self):
         for i in [1, 2, 3]:
             if (
                 self.board["A" + str(i)] ==
@@ -63,7 +71,7 @@ class TicTacToeBoard:
                 return i
         return None
 
-    def check_dia(self):
+    def __which_dia(self):
         if (
             self.board["A1"] ==
             self.board["B2"] ==
@@ -80,49 +88,35 @@ class TicTacToeBoard:
         ):
             return 3
 
-    def check_draw(self):
-        return False if " " in self.board.values() else True
+    def __check_draw(self):
+        return " " in self.board.values()
 
     def game_status(self):
-        c = self.check_cols()  # returns the letter of winner's col
-        r = self.check_rows()  # returns number of winner's row
-        d = self.check_dia()  # returns 1 or 3, depending on the direction of d
+        c = self.__which_col()  # returns the letter of winner's col
+        r = self.__which_row()  # returns number of winner's row
+        d = self.__which_dia()  # returns 1 or 3 - depends on the dia
         if r:
             return "{} wins!".format(self.board["A" + str(r)])
         elif c:
             return "{} wins!".format(self.board[c + "1"])
         elif d:
             return "{} wins!".format(self.board["A" + str(d)])
-        elif self.check_draw():  # if it's draw
+        elif self.__check_draw():  # if it's draw
             return "Draw!"
         else:
             return "Game in progress."
 
     def __setitem__(self, other, val):
-        if self.board[other.upper()] != " ":  # Place taken
-            raise InvalidMove()
-        elif other.upper() not in self.board.keys():  # Wrong Key
+
+        if other not in self.board.keys():  # Wrong Key
             raise InvalidKey()
         elif val not in ("O", "X"):  # Wrong Value
             raise InvalidValue()
-        elif val == self.next_on_turn and not self.first_move:  # Not your turn
+        elif self.board[other] != " ":  # Place taken
+            raise InvalidMove()
+        elif val != self.on_turn and self.on_turn != "":  # Not your turn
             raise NotYourTurn()
-        elif self.first_move:
-            self.board[other.upper()] = val
-            self.first_move = 0
-            self.next_on_turn = val
         else:
-            self.board[other.upper()] = val
-            self.on_turn = self.next_on_turn
-            self.next_on_turn = val
-
-
-if __name__ == "__main__":
-    brd = TicTacToeBoard()
-    brd["A1"] = 'X'
-    brd["A2"] = 'O'
-    brd["B1"] = 'X'
-    brd["A3"] = 'O'
-    brd["C1"] = 'X'
-    print(brd.game_status())
-    print(brd)
+            self.board[other] = val
+            self.on_turn = str(set(("O", "X")).difference((val,)))\
+                .replace("{", "").replace("}", "").replace("'", "")
