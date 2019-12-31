@@ -1,5 +1,5 @@
 all:
-	gcc -o shell shell.c
+	gcc -o shell 2shell.c
 
 two:
 	gcc -o shell 2shell.c

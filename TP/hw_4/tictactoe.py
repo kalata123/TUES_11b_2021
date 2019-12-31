@@ -57,7 +57,7 @@ class TicTacToeBoard:
         pass
 
     def __setitem__(self, other, val):
-        self.board[other.upper()] = val
+        self.board[other] = val
 
 
 if __name__ == "__main__":

@@ -8,14 +8,15 @@
 char** parse_cmdline( const char* cmdline );
 
 char** parse_cmdline( const char* cmdline ){
-    int count_spcs = 0;
+    /*int count_spcs = 0;
     char line[strlen(cmdline)];
     strcpy(line, cmdline);
     for (int i = 0; i < strlen(cmdline); i++){
         if (cmdline[i] == ' ') count_spcs++;
     }
-    char ** array = malloc(sizeof(char *) * (count_spcs +  2));
+    char ** array;
     char *val;
+    array = malloc(sizeof(char *) * (count_spcs + 2));
 
     val = strtok(line, " ");
     int i = 0;
@@ -24,18 +25,34 @@ char** parse_cmdline( const char* cmdline ){
         i++;
         val = strtok(NULL, " ");
     }
-    return array;
+    array[i] = NULL;
+    return array;*/
+    // -----------------------------------
+    char str[strlen(cmdline)];
+    strcpy(str, cmdline);
+    int j = 0;
+    char ** res = malloc(sizeof(char*));
+    char *tmp;
+    const char key[2] = " ";
+    tmp = strtok(str, key);
+    while (tmp != NULL)
+    {
+        res = realloc(res, sizeof(char *)*(j+1));
+        res[j] = tmp;
+        j++;
+        tmp = strtok(NULL, key);
+    }
+    res = realloc(res, sizeof(char*)*(j+1));
+    res[j] = NULL;
+    return res;
 }
 
 int main(int argc, char *argv[]) {
-    char *str = "Hello from the other side";
-    char ** array;
-    array = parse_cmdline(str);
-    int i = 5;
-    for (i = 4; i >= 0; i--){
-        do{}while (write(STDOUT_FILENO, *(array+ i), strlen(*(array + i))) == 0);
-        do{}while (write(STDOUT_FILENO, " ", 1) == 0);
+    char str[1024];
+    while (1)
+    {
+        if (fgets(str, 1024, stdin) == NULL) exit(1);
+        printf("%s\n", str);
     }
-    free(array);
     return 0;
 }
