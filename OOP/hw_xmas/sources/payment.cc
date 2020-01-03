@@ -48,3 +48,7 @@ vector<Media*> Payment::getUsedMedia(){
 bool Payment::getIsPaid(){
     return this->is_paid;
 }
+
+void Payment::setAsPaid(){
+    this->is_paid = true;
+}

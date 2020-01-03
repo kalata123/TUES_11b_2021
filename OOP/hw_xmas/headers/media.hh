@@ -13,11 +13,10 @@ class Media{
 
         Media(string, string, unsigned int);
 
-        // virtual int sumPrice();
-
         string getTitle();
         string getAuthor();
         virtual unsigned int getPrice();
+        void raiseErrorNoSuchMedia();
 };
 
 #endif

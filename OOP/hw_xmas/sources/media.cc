@@ -14,3 +14,7 @@ string Media::getAuthor(){
 unsigned int Media::getPrice(){
     return this->price;
 }
+
+void Media::raiseErrorNoSuchMedia(){
+    throw this->ErrorNoSuchMedia();
+}

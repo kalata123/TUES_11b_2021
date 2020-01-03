@@ -22,10 +22,11 @@ class Service{
         Service(vector<Media*>, vector<User>);
 
         vector<Media*> getMediaOffered();
-        Payment getPaymentByUser(User user);
-        void markPaymentAsPaid();
-        Media* getMediaByTitle();
-
+        Payment getPaymentByUser(User);
+        void markPaymentAsPaid(User, int);
+        auto getMediaByTitle(string);
+        void addNewMedia(Media*);
+        void addNewUser(User);
 };
 
 #endif

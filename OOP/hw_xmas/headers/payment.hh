@@ -31,6 +31,7 @@ class Payment{
         string getEndDate();
         vector<Media*> getUsedMedia();
         bool getIsPaid();
+        void setAsPaid();
 };
 
 #endif
