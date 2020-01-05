@@ -40,3 +40,7 @@ void Service::addNewMedia(Media* media){
 void Service::addNewUser(User user){
     this->users.push_back(user);
 }
+
+vector<User> Service::getUsers(){
+    return this->users;
+}
