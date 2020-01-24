@@ -1,4 +1,4 @@
-#include "../headers/tech.hh"
+#include "headers/tech.hh"
 
 Tech::Tech(
     string name,

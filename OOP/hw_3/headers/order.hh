@@ -16,18 +16,19 @@ class Order{
     protected:
         int id;
         User user;
-        vector<Product *> oredered_types; 
+        vector<Product *> ordered_products; 
         map<string, int> capacity_for_each_type; // type - capacity
-        int status; // 0 - new/ 1 - Accepted/ 2 - Sent
+        int status = 0; // 0 - new/ 1 - Accepted/ 2 - Sent
     public:
-        Order(int, User, vector<Product *>, map<string, int>, int);
+        Order(int, User, vector<Product *>, map<string, int>);
         int getId();
         User getUser();
         vector<Product *> getOrderedTypes();
         map<string, int> getCapacityForEachType();
         int getStatus();
 
-        void setStatus(int); //ndef
+        void addToOrder(Product *);
+        void setStatus(int);
 };
 
 #endif

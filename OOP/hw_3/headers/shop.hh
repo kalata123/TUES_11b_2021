@@ -9,6 +9,7 @@
 using std::string;
 using std::vector;
 using std::pair;
+using std::exception;
 
 class User;
 class Product;
@@ -20,10 +21,19 @@ class Shop{
         vector<Product *> products;
         vector<Order> orders;
     public:
-        Shop();
+        Shop(Shop const&);
+        Shop(vector<User>, vector<Product *>, vector<Order>);
+
+        class ErrorExistingUser: exception {};
+        class ErrorExistingOrder: exception {};
+        class ErrorInOrder: exception {};
+
+        void addUser(User * user);
+        void add_product(Product * product);
+        void create_order(Order * order);
         pair<double, int> accept_order(int order_id);
         void send_order(int order_id);
-        vector<Order const&> get_orders_by_user(int user_id) const;
+        vector<Order> get_orders_by_user(int user_id);
         vector<Product *> get_products_by_deliverer(int deliverer_id);
 
 };

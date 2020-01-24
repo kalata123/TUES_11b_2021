@@ -1,4 +1,4 @@
-#include "../headers/cloth.hh"
+#include "headers/cloth.hh"
 
 Cloth::Cloth(
     string name,

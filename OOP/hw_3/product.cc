@@ -1,4 +1,4 @@
-#include "../headers/product.hh"
+#include "headers/product.hh"
 
 Product::Product(string name, double price, int quantity, Deliverer deliverer, int delivery_days)
 : name(name), price(price), quantity(quantity), deliverer(deliverer), delivery_days(delivery_days) {};

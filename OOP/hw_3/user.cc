@@ -1,4 +1,4 @@
-#include "../headers/user.hh"
+#include "headers/user.hh"
 
 User::User(int id, string username, string password)
 : id(id), username(username), password(password) {}
