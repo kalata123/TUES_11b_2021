@@ -1,64 +1,76 @@
-#include "pthread.h"
-#include "stdio.h"
-#include "unistd.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#define NUM_ACTIONS 20
-#define GOLD_GATHER_RATE 10
-#define GOLD_SELL_RATE 10
-
-pthread_mutex_t lock;
-unsigned int gold;
+pthread_mutex_t mutex;
+int gold = 0;
 
 void * trader(void *);
 void * miner(void *);
 
 int main(int argc, char const *argv[])
 {
-    gold = 0;
-    pthread_mutex_init(&lock, NULL);
+    long miners = 1, traders = 1;
+    if (argc > 2){
+        miners = atoi(argv[1]), traders = atoi(argv[2]);
+    }
+    pthread_t miner_threads[miners], trader_threads[traders];
+    pthread_mutex_init(&mutex, NULL);
 
-    pthread_t miner_th;
-    pthread_t trader_th;
+    for (long i = 0; i < miners; i++){
+        if (pthread_create(&miner_threads[i], NULL, miner, (void*)i) == -1){
+            perror("pthread_create miners");
+        }
+    }
+    for (long i = 0; i < traders; ++i){
+        if (pthread_create(&trader_threads[i], NULL, trader, (void*)i) == -1){
+            perror("pthread_create traders");
+        }
+    }
 
-    pthread_create(&miner_th, NULL, miner, (void*)1);
-    pthread_create(&trader_th, NULL, trader, (void*)0);
+    for (long i = 0; i < miners; i++){
+        if (pthread_join(miner_threads[i], NULL) == -1) {
+            perror("pthread_join miners");
+        }
+    }
+    for (long i = 0; i < traders; ++i){
+        if (pthread_join(trader_threads[i], NULL) == -1){
+            perror("pthread_join traders");
+        }
+    }
+    pthread_mutex_destroy(&mutex);
 
-    pthread_join(miner_th, NULL);
-    pthread_join(trader_th, NULL);
-
-    printf("GOLD: %ud ", gold);
-
-    pthread_mutex_destroy(&lock);
+    printf("Gold: %d\n", gold);
     return 0;
 }
 
 
 void *miner(void *id){
-    long miner_id = (long)id;
-    for(int i = 0; i < NUM_ACTIONS; ++i){
-        pthread_mutex_lock(&lock);
-        gold += GOLD_GATHER_RATE;
-        pthread_mutex_unlock(&lock);
-        printf("Miner %ld is digging\n", miner_id);
+    long miner_id = (long)id + 1;
+    for(int i = 0; i < 20; ++i){
+        pthread_mutex_lock(&mutex);
+        gold += 10;
+        printf("Miner %ld gathered 10 gold\n", miner_id);
+        pthread_mutex_unlock(&mutex);
         sleep(2);
     }
     return NULL;
 }
 
 void *trader(void *id){
-    long trader_id = (long)id;
-    for(int i = 0; i < NUM_ACTIONS; ++i){
+    long trader_id = (long)id + 1;
+    for(int i = 0; i < 20; ++i){
+        pthread_mutex_lock(&mutex);
         if(gold){
-            pthread_mutex_lock(&lock);
-            gold -= GOLD_SELL_RATE;
-            pthread_mutex_unlock(&lock);
-            printf("trader %ld is selling\n", trader_id);
+            gold -= 10;
+            printf("Trader %ld sold 10 gold\n", trader_id);
         }else
         {
-            printf("Trader %ld cant sell - no gold to sell\n", trader_id);
+            printf("The warehouse is empty, cannot sell!\n");
         }
+        pthread_mutex_unlock(&mutex);
         sleep(2);
     }
-
     return NULL;
 }
