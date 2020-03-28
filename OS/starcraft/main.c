@@ -1,6 +1,7 @@
 #include "pthread.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "curses.h"
 #include <unistd.h>
 
 #define MINERAL_BLOCKS 2 
@@ -23,6 +24,23 @@ int main(int argc, char const *argv[]) {
     init();
     // check cmd line for mineral blocks
 
+    while (1)
+    {
+        int ch = getch();
+        switch (ch){
+            case 'm':
+                // create soldier
+                break;
+            
+            case 's':
+                // create scv
+                break;
+            default:
+                break;
+            }
+
+    }
+    
 
 
     outit();
