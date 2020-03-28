@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "types.h": "c",
-        "string.h": "c",
-        "stdlib.h": "c",
-        "pthread.h": "c"
-    }
-}
