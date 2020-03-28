@@ -5,10 +5,10 @@
 #include <stdlib.h>
 
 void *create_solder(void *);
-void *create_miner();
+void *create_miner(void *);
 void *create_zombies();
 
-int ZOMBIES = 1, SOLDIERS = 0, LIVES = 100, GOLD = 100;
+int ZOMBIES = 1, SOLDIERS = 0, LIVES = 100, GOLD = 300;
 
 pthread_mutex_t gold_mutex;
 pthread_mutex_t soldiers_mutex;
@@ -33,14 +33,24 @@ int main() {
 				pthread_mutex_destroy(&soldiers_mutex);
 				game_end(ZOMBIES);
 				break;
-			case 'm':;
+			case 'n':;
 				pthread_t miner_thread;
+				if (GOLD >= 1000){
+					pthread_mutex_lock(&gold_mutex);
+					GOLD -= 1000;
+					print_gold(GOLD);
+					pthread_mutex_unlock(&gold_mutex);
+					pthread_create(&miner_thread, NULL, create_miner, (void *) 10);
+				} else print_fail("Not enough gold!");
+				break;
+			case 'm':;
+				pthread_t x10_miner_thread;
 				if (GOLD >= 100){
 					pthread_mutex_lock(&gold_mutex);
 					GOLD -= 100;
 					print_gold(GOLD);
 					pthread_mutex_unlock(&gold_mutex);
-					pthread_create(&miner_thread, NULL, create_miner, NULL);
+					pthread_create(&x10_miner_thread, NULL, create_miner, (void*) 1);
 				} else print_fail("Not enough gold!");
 				break;
 			case 's':
@@ -70,6 +80,22 @@ int main() {
 
 					pthread_mutex_lock(&soldiers_mutex);
 					SOLDIERS += 10;
+					print_soldiers(SOLDIERS);
+					pthread_mutex_unlock(&soldiers_mutex);
+
+				} else print_fail("Not enough gold!"); 
+				break;
+			case 'z':
+				if (GOLD >= 1000){
+					print_msg("100 x soldier created!");
+
+					pthread_mutex_lock(&gold_mutex);
+					GOLD -= 1000;
+					print_gold(GOLD);
+					pthread_mutex_unlock(&gold_mutex);
+
+					pthread_mutex_lock(&soldiers_mutex);
+					SOLDIERS += 100;
 					print_soldiers(SOLDIERS);
 					pthread_mutex_unlock(&soldiers_mutex);
 
@@ -114,11 +140,12 @@ int main() {
 // 	} else print_fail("Not enough gold!");
 // }
 
-void *create_miner(){
-	print_msg("Miner created!");
+void *create_miner(void * num){
+	long miners = (long) num;
+	print_msg(miners >= 1 ? "10 x miners created!" : "Miner created");
 	while (1){
 		pthread_mutex_lock(&gold_mutex);
-		GOLD += 10;
+		GOLD += 10*miners;
 		print_gold(GOLD);
 		pthread_mutex_unlock(&gold_mutex);
 		sleep(1);
