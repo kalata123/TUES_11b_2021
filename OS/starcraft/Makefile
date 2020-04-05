@@ -1,5 +1,5 @@
 all: main.c
-	gcc -o starcraft main.c -pthread -lcurses
+	gcc -o starcraft3 main.c -pthread
 
 clean:
-	rm -rf starcraft
+	rm -rf starcraft3
