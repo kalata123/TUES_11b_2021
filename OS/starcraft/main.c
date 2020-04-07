@@ -12,8 +12,8 @@ int MINERAL_BLOCKS = 2, // total mineral blocs
     soldiers = 0, // need 20 to wi
     minerals_in_stock = 0; // + soldiers*50 + (scv-5{initial scv don't count})*50 == MINERAL_BLOCKS * MINERALS
 
-int *mineral_blocks;
-pthread_mutex_t *mineral_block_mutexes; // must be dynamic for console args to work
+int *mineral_blocks = NULL;
+pthread_mutex_t *mineral_block_mutexes = NULL; // must be dynamic for console args to work
 pthread_mutex_t command_center_minerals_mutex,
                 command_center_soldiers_mutex;
 
@@ -22,11 +22,11 @@ void *scv(void *shof);
 void *check_win_lose();
 
 void create_soldier();
-int check_enough_minerals(int);
+// int check_enough_minerals(int);
 
 void init();
 void outit();
-void to_exit();
+int hasMinerals();
 
 int main(int argc, char const *argv[]) {
     if (argc >= 2){
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[]) {
     init();
     long scv_id = 0;
 
-    // start 5 csv's
+    // start scv's
     pthread_t scv_threads[200];
     for (; scv_id < 5; ++scv_id){
         if (pthread_create(&scv_threads[scv_id], NULL, scv, (void *)(scv_id + 1))){
@@ -58,15 +58,16 @@ int main(int argc, char const *argv[]) {
     {
         scanf("%c",&ch);
         switch (ch){
-            case 'm':;
-                // create soldier
-                check_enough_minerals(50) ? create_soldier() : printf("Not enough minerals.\n");
+            case 'm':
+                if (scvs + soldiers < 200) {
+                    minerals_in_stock >= 50 ? create_soldier() : printf("Not enough minerals.\n");
+                }
                 break;
             case 's':
                 if (scvs + soldiers < 200) {
-                    if (check_enough_minerals(50)) {
+                    if (minerals_in_stock >= 50) {
                         sleep(4);
-                        if (pthread_create(&scv_threads[scv_id], NULL, scv, (void *)(scv_id))){
+                        if (pthread_create(&scv_threads[scv_id], NULL, scv, (void *)(++scv_id))){
                             perror("Creating additional SCVs");
                         }
                         scvs++;
@@ -75,8 +76,7 @@ int main(int argc, char const *argv[]) {
                         printf("Not enough minerals.\n");
                     }
                 } else {
-                    printf(soldiers < 20 ? "You lost" : "You won");
-                    exit(0);
+                    printf("You are trying to create more than allowed units\n");
                 }
                 break;
             case 'q':
@@ -86,42 +86,24 @@ int main(int argc, char const *argv[]) {
 
 
     outit();
-    free(mineral_blocks);
-    free(mineral_block_mutexes);
-    return 0;
-}
-
-
-int check_enough_minerals(int minerals){
-    for (int i = 0; i < MINERAL_BLOCKS; ++i){
-        if (mineral_blocks[i] >= (minerals > 0 ? minerals : 50)){
-            return 1;
-        }
-    }
     return 0;
 }
 
 void create_soldier(){
     while (1){
         for (int i = 0; i < MINERAL_BLOCKS; ++i){
-            if (!pthread_mutex_trylock(&mineral_block_mutexes[i]) && mineral_blocks[i] >= 50){
-                mineral_blocks[i] -= 50;
-                if (pthread_mutex_unlock(&mineral_block_mutexes[i]) != 0){
-                    perror("Pthread unlock mineral blocks in scv");
-                }
-                sleep(1);
-                if (pthread_mutex_lock(&command_center_soldiers_mutex) == 0){
-                    soldiers += 1;
-                    if (pthread_mutex_unlock(&command_center_soldiers_mutex) != 0){
-                        perror("Pthread unlock mineral blocks in scv");
-                    }
-                }else {
-                    perror("Pthread lock soldiers mutex");
-                }
-                printf("You wanna piece of me, boy?\n");
-                return ;
-                
+            if (pthread_mutex_lock(&command_center_minerals_mutex)){
+                perror("minerals mutex in create soldier");
             }
+            printf("Soldier \n");
+            minerals_in_stock -= 50;
+            if (pthread_mutex_unlock(&command_center_minerals_mutex) != 0){
+                perror("Pthread unlock mineral blocks in scv");
+            }
+            sleep(1);
+            soldiers += 1;
+            printf("You wanna piece of me, boy?\n");
+            return ;
         }
     }
 }
@@ -152,57 +134,47 @@ void outit(){
     if (pthread_mutex_destroy(&command_center_soldiers_mutex) != 0){
         perror("Destroying Command center soldiers mutex");
     }
+    free(mineral_blocks);
+    free(mineral_block_mutexes);
 }
 
 
-void to_exit(){
-    for (int i = 0; i < MINERAL_BLOCKS; ++i){
+int hasMinerals(){
 
+    for (int i = 0; i < MINERAL_BLOCKS; ++i){
+        if (mineral_blocks[i] < 500) {
+            return 1;
+        }
     }
+    return 0;
 }
 
 void *check_win_lose(){
-    int has_minerals = 0, has_soldiers = 1, i;
+    int has_minerals = 0, i;
     while (1){
         for (i = 0, has_minerals = 0; i < MINERAL_BLOCKS; ++i){
             if (mineral_blocks[i] < MINERALS){
                 has_minerals = 1;
                 break;
             }
-
         }
         if (soldiers >= 20  && !has_minerals){
             printf("Map minerals %d, player minerals %d, SCVs %d, Marines %d\n",
                 MINERAL_BLOCKS * MINERALS, minerals_in_stock, scvs, soldiers);
             return NULL;
         }
-        sleep(5);
     }
     return NULL;
 }
 
 
-void *scv(void *id){
-    int empty_mineral_blocks[MINERAL_BLOCKS]; // if any block is 1 - it is empty
-    memset(empty_mineral_blocks, 0, MINERAL_BLOCKS*sizeof(int));
-    if ((long)id > 5){
-        // Perform this check if you create move than one additional scv
-        for (int i = 0; i < MINERAL_BLOCKS; ++i){
-            if (mineral_blocks[i] >= MINERALS){
-                // cheks which mineral_blocks are empty
-                empty_mineral_blocks[i] = 1;
-            }
-        }
-    }
-        
-    int checker = 0; // checks if all mineral blocks are empty;
+void *scv(void *id){        
     // Step 6 - over again
     while (1){
         for (int i = 0; i < MINERAL_BLOCKS; ++i){
-            sleep(3); // Step 1 - go to not empty mineral block - 3 sec
+            sleep(3);
             // Step 2 - check if mineral block is empty
-            if (!empty_mineral_blocks[i]){ // !0 == true
-                checker = 0; // mineral block is not empty
+            if (mineral_blocks[i] < 500){ // !0 == true
                 // Step 3 - dig minerals - 0 sec 
                 if (!pthread_mutex_trylock(&mineral_block_mutexes[i])){
                     printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
@@ -211,9 +183,6 @@ void *scv(void *id){
                     // FOR: increments the used mineral_blocks and increments the taken minerals by the scv
                     if (pthread_mutex_unlock(&mineral_block_mutexes[i])){
                         perror("Unlock mineral block failed");
-                    }
-                    if (mineral_blocks[i] >= MINERALS){ // mineral block is empty
-                        empty_mineral_blocks[i] = 1;
                     }
                     // Step 4 - transporting 2 sec
                     printf("SCV %ld is transporting minerals\n", (long)id);
@@ -224,13 +193,10 @@ void *scv(void *id){
                     pthread_mutex_unlock(&command_center_minerals_mutex);
                     printf("SCV %ld delivered minerals to the Command center\n", (long)id);
                 }
-            } else{
-                checker = 1; // mineral block is empty
-                // do not return here - there's a 'for' cycle
             }
         }
 
-        if (checker){ // all mineral blocks are empty
+        if (!hasMinerals()){ // all mineral blocks are empty
             return NULL; // the scv is no longer needed.
         }
     }
