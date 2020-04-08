@@ -23,13 +23,14 @@ pthread_mutex_t *mineral_block_mutexes = NULL; // must be dynamic for console ar
 pthread_mutex_t command_center_minerals_mutex,
                 command_center_soldiers_mutex;
 
-// void command_center();
+// functions for threads
 void *scv(void *id);
-int hasMinerals();
 void *user_input();
+
+// helping functions
 void create_soldier();
 void create_scv();
-// int check_enough_minerals(int);
+int hasMinerals();
 
 void init();
 void outit();
@@ -68,68 +69,6 @@ int main(int argc, char *argv[]) {
     printf("Map minerals %d, player minerals %d, SCVs %ld, Marines %d\n",
         MINERAL_BLOCKS * MINERALS, minerals_in_stock, scvs, soldiers);
     outit();
-    // pthread_exit(NULL);
-    return 0;
-}
-
-void create_soldier(){
-    mutex_lock(&command_center_minerals_mutex);
-    minerals_in_stock -= 50;
-    mutex_unlock(&command_center_minerals_mutex);
-    sleep(1);
-    soldiers += 1;
-    printf("You wanna piece of me, boy?\n");
-}
-
-void init(){
-    for (int i = 0; i < MINERAL_BLOCKS; ++i){
-        if (pthread_mutex_init(&mineral_block_mutexes[i], NULL) != 0){
-            perror("Initializing mineral mutexes");
-            pthread_exit(NULL);
-            exit(0);
-        }
-    }
-    if (pthread_mutex_init(&command_center_minerals_mutex, NULL) != 0){
-        perror("Initializing Command center minerals mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-    if (pthread_mutex_init(&command_center_soldiers_mutex, NULL) != 0){
-        perror("Initializing Command center soldiers mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-}
-
-void outit(){
-    for (int i = 0; i < MINERAL_BLOCKS; ++i){
-        if (pthread_mutex_destroy(&mineral_block_mutexes[i]) != 0){
-            perror("Destroying mineral minerals mutexes");
-            pthread_exit(NULL);
-            exit(0);
-        }
-    }
-    if (pthread_mutex_destroy(&command_center_minerals_mutex) != 0){
-        perror("Destroying Command center minerals mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-    if (pthread_mutex_destroy(&command_center_soldiers_mutex) != 0){
-        perror("Destroying Command center soldiers mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-    free(mineral_blocks);
-    free(mineral_block_mutexes);
-}
-
-
-int hasMinerals(){
-    for (int i = 0; i < MINERAL_BLOCKS; ++i){
-        if (mineral_blocks[i] < MINERALS) {
-            return 1;
-        }
-    }
     return 0;
 }
 
@@ -204,6 +143,15 @@ void *user_input(){
     }
 }
 
+void create_soldier(){
+    mutex_lock(&command_center_minerals_mutex);
+    minerals_in_stock -= 50;
+    mutex_unlock(&command_center_minerals_mutex);
+    sleep(1);
+    soldiers += 1;
+    printf("You wanna piece of me, boy?\n");
+}
+
 void create_scv(){
     mutex_lock(&command_center_minerals_mutex);
     minerals_in_stock -= 50;
@@ -211,6 +159,57 @@ void create_scv(){
     sleep(4);
     create_thread(&scv_threads[scvs], NULL, scv, (void *)(++scvs));
     printf("SCV good to go, sir.\n");
+}
+
+int hasMinerals(){
+    for (int i = 0; i < MINERAL_BLOCKS; ++i){
+        if (mineral_blocks[i] < MINERALS) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void init(){
+    for (int i = 0; i < MINERAL_BLOCKS; ++i){
+        if (pthread_mutex_init(&mineral_block_mutexes[i], NULL) != 0){
+            perror("Initializing mineral mutexes");
+            pthread_exit(NULL);
+            exit(0);
+        }
+    }
+    if (pthread_mutex_init(&command_center_minerals_mutex, NULL) != 0){
+        perror("Initializing Command center minerals mutex");
+        pthread_exit(NULL);
+        exit(0);
+    }
+    if (pthread_mutex_init(&command_center_soldiers_mutex, NULL) != 0){
+        perror("Initializing Command center soldiers mutex");
+        pthread_exit(NULL);
+        exit(0);
+    }
+}
+
+void outit(){
+    for (int i = 0; i < MINERAL_BLOCKS; ++i){
+        if (pthread_mutex_destroy(&mineral_block_mutexes[i]) != 0){
+            perror("Destroying mineral minerals mutexes");
+            pthread_exit(NULL);
+            exit(0);
+        }
+    }
+    if (pthread_mutex_destroy(&command_center_minerals_mutex) != 0){
+        perror("Destroying Command center minerals mutex");
+        pthread_exit(NULL);
+        exit(0);
+    }
+    if (pthread_mutex_destroy(&command_center_soldiers_mutex) != 0){
+        perror("Destroying Command center soldiers mutex");
+        pthread_exit(NULL);
+        exit(0);
+    }
+    free(mineral_blocks);
+    free(mineral_block_mutexes);
 }
 
 int mutex_trylock(pthread_mutex_t *mutex){
