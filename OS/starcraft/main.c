@@ -62,6 +62,7 @@ int main(int argc, char *argv[]) {
     create_thread(&userInput, NULL, user_input, NULL);
 
     join_thread(&userInput, NULL);
+
     for (int i = 0; i < scvs; ++i) {
         join_thread(&scv_threads[i], NULL);
     }
@@ -78,7 +79,10 @@ void *scv(void *id){
         for (int i = 0; i < MINERAL_BLOCKS; ++i){
             sleep(3);
             // Step 2 - check if mineral block is empty
+            mutex_lock(&mineral_block_mutexes[i]);
             if (mineral_blocks[i] < MINERALS){ // !0 == true
+                mutex_unlock(&mineral_block_mutexes[i]);
+
                 // Step 3 - dig minerals - 0 sec 
                 if (mutex_trylock(&mineral_block_mutexes[i])){
                     printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
@@ -105,6 +109,8 @@ void *scv(void *id){
                     //     printf("Mineral Block %d has %d minerals\n", i + 1, mineral_blocks[i]);
                     // }
                 }
+            } else {
+                mutex_unlock(&mineral_block_mutexes[i]);
             }
         }
 
@@ -126,7 +132,9 @@ void *user_input(){
         switch (ch){
             case 'm':
                 if (scvs + soldiers < MAX_UNITS) {
+                    mutex_lock(&command_center_minerals_mutex);
                     minerals_in_stock >= 50 ? create_soldier() : printf("Not enough minerals.\n");
+                    mutex_unlock(&command_center_minerals_mutex);
                     if (soldiers >= SOLDIERS) {
                         return NULL;
                     }  
@@ -134,7 +142,9 @@ void *user_input(){
                 break;
             case 's':
                 if (scvs + soldiers < MAX_UNITS) {
+                    mutex_lock(&command_center_minerals_mutex);
                     minerals_in_stock >= 50 ? create_scv() : printf("Not enough minerals.\n");
+                    mutex_unlock(&command_center_minerals_mutex);
                 }
                 break;
             case 'q':
@@ -144,18 +154,18 @@ void *user_input(){
 }
 
 void create_soldier(){
-    mutex_lock(&command_center_minerals_mutex);
+    // mutex_lock(&command_center_minerals_mutex);
     minerals_in_stock -= 50;
-    mutex_unlock(&command_center_minerals_mutex);
+    // mutex_unlock(&command_center_minerals_mutex);
     sleep(1);
     soldiers += 1;
     printf("You wanna piece of me, boy?\n");
 }
 
 void create_scv(){
-    mutex_lock(&command_center_minerals_mutex);
+    // mutex_lock(&command_center_minerals_mutex);
     minerals_in_stock -= 50;
-    mutex_unlock(&command_center_minerals_mutex);
+    // mutex_unlock(&command_center_minerals_mutex);
     sleep(4);
     create_thread(&scv_threads[scvs], NULL, scv, (void *)(++scvs));
     printf("SCV good to go, sir.\n");
@@ -163,8 +173,12 @@ void create_scv(){
 
 int hasMinerals(){
     for (int i = 0; i < MINERAL_BLOCKS; ++i){
+        mutex_lock(&mineral_block_mutexes[i]);
         if (mineral_blocks[i] < MINERALS) {
+            mutex_unlock(&mineral_block_mutexes[i]);
             return 1;
+        } else {
+            mutex_unlock(&mineral_block_mutexes[i]);
         }
     }
     return 0;
