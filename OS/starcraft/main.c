@@ -4,24 +4,27 @@
 #include <unistd.h>
 #include <string.h>
 
-#define MAX_UNITS 200  // scvs + soldiers <= 200
-#define MINERALS 500 // minerals in each mineral block
-#define SOLDIERS 20 // needed soldiers to finish the game
-// #define MINERALS 50 // testing defines
-// #define SOLDIERS 2 // testing defines
+/*
+Some global variables that DO NOT change during the runtime
+*/
+#define MAX_UNITS 200 // scvs + soldiers <= 200
+#define MINERALS  500 // minerals in each mineral block
+#define SOLDIERS   20 // needed soldiers to finish the game
 
-int MINERAL_BLOCKS = 2, // total mineral blocs
-    soldiers = 0, // need 20 to win
-    minerals_in_stock = 0; // + soldiers*50 + (scv-5{initial scv don't count})*50 == MINERAL_BLOCKS * MINERALS
+/*
+Some global variables that DO change during the runtime
+*/
+int MINERAL_BLOCKS  = 2, // total mineral blocs
+    soldiers        = 0, // need 20 to win
+    cc_minerals     = 0; // + soldiers*50 + (scv-5{initial scv don't count})*50 == MINERAL_BLOCKS * MINERALS
 long scvs = 5; // workers that dig minerals
 
 int *mineral_blocks = NULL;
 
 
-pthread_t scv_threads[MAX_UNITS];
-pthread_mutex_t *mineral_block_mutexes = NULL; // must be dynamic for console args to work
-pthread_mutex_t command_center_minerals_mutex,
-                command_center_soldiers_mutex;
+pthread_t        scv_threads[MAX_UNITS];
+pthread_mutex_t* mineral_block_mutexes = NULL; // must be dynamic for console args to work
+pthread_mutex_t  cc_minerals_mutex;
 
 // functions for threads
 void *scv(void *id);
@@ -30,12 +33,12 @@ void *user_input();
 // helping functions
 void create_soldier();
 void create_scv();
-int hasMinerals();
-
+int  hasMinerals();
+int  canMine(int *, pthread_mutex_t *);
 void init();
 void outit();
 
-int mutex_trylock(pthread_mutex_t *);
+int  mutex_trylock(pthread_mutex_t *);
 void mutex_lock(pthread_mutex_t *);
 void mutex_unlock(pthread_mutex_t *);
 void join_thread(pthread_t *, void *);
@@ -68,56 +71,35 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Map minerals %d, player minerals %d, SCVs %ld, Marines %d\n",
-        MINERAL_BLOCKS * MINERALS, minerals_in_stock, scvs, soldiers);
+        MINERAL_BLOCKS * MINERALS, cc_minerals, scvs, soldiers);
     outit();
     return 0;
 }
 
 void *scv(void *id){        
     // Step 6 - over again
-    while (1){
+    while (hasMinerals()){
         for (int i = 0; i < MINERAL_BLOCKS; ++i){
             sleep(3);
             // Step 2 - check if mineral block is empty
-            mutex_lock(&mineral_block_mutexes[i]);
-            if (mineral_blocks[i] < MINERALS){ // !0 == true
+            if (canMine(&mineral_blocks[i], &mineral_block_mutexes[i]) && mutex_trylock(&mineral_block_mutexes[i])){ // !0 == true
+                // Step 3 - dig minerals - 0 sec
+                printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
+                int taken_minerals = (mineral_blocks[i] >= MINERALS - 8) ? MINERALS - mineral_blocks[i] : 8; // should be out of sycle - used in another place, too
+                mineral_blocks[i] += taken_minerals;
                 mutex_unlock(&mineral_block_mutexes[i]);
-
-                // Step 3 - dig minerals - 0 sec 
-                if (mutex_trylock(&mineral_block_mutexes[i])){
-                    printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
-                    int taken_minerals = 8; // should be out of sycle - used in another place, too
-                    if (mineral_blocks[i] >= MINERALS - 8) {
-                        taken_minerals = MINERALS - mineral_blocks[i];
-                        mineral_blocks[i] = MINERALS;
-                    } else {
-                        mineral_blocks[i] += taken_minerals;
-                    }
-                    // for (; taken_minerals < 8 || mineral_blocks[i] >= MINERALS; ++mineral_blocks[i], ++taken_minerals);
-                    // FOR: increments the used mineral_blocks and increments the taken minerals by the scv
-                    mutex_unlock(&mineral_block_mutexes[i]);
-                    // Step 4 - transporting 2 sec
-                    printf("SCV %ld is transporting minerals\n", (long)id);
-                    sleep(2);
-                    // Step 5 - delivering 0 sec
-                    mutex_lock(&command_center_minerals_mutex);
-                    minerals_in_stock += taken_minerals;
-                    mutex_unlock(&command_center_minerals_mutex);
-                    printf("SCV %ld delivered minerals to the Command center\n", (long)id);
-                    // printf("SCV %ld delivered minerals to the Command center TOTAL: %d\n", (long)id, minerals_in_stock);
-                    // for (int i = 0; i < MINERAL_BLOCKS; ++i) {
-                    //     printf("Mineral Block %d has %d minerals\n", i + 1, mineral_blocks[i]);
-                    // }
-                }
-            } else {
-                mutex_unlock(&mineral_block_mutexes[i]);
+                // Step 4 - transporting 2 sec
+                printf("SCV %ld is transporting minerals\n", (long)id);
+                sleep(2);
+                // Step 5 - delivering 0 sec
+                mutex_lock(&cc_minerals_mutex);
+                cc_minerals += taken_minerals;
+                mutex_unlock(&cc_minerals_mutex);
+                printf("SCV %ld delivered minerals to the Command center\n", (long)id);
             }
         }
-
-        if (!hasMinerals()){ // all mineral blocks are empty
-            return NULL; // the scv is no longer needed.
-        }
     }
+    return NULL;
 }
 
 void *user_input(){
@@ -132,9 +114,9 @@ void *user_input(){
         switch (ch){
             case 'm':
                 if (scvs + soldiers < MAX_UNITS) {
-                    mutex_lock(&command_center_minerals_mutex);
-                    minerals_in_stock >= 50 ? create_soldier() : printf("Not enough minerals.\n");
-                    mutex_unlock(&command_center_minerals_mutex);
+                    mutex_lock(&cc_minerals_mutex);
+                    cc_minerals >= 50 ? create_soldier() : printf("Not enough minerals.\n");
+                    mutex_unlock(&cc_minerals_mutex);
                     if (soldiers >= SOLDIERS) {
                         return NULL;
                     }  
@@ -142,9 +124,9 @@ void *user_input(){
                 break;
             case 's':
                 if (scvs + soldiers < MAX_UNITS) {
-                    mutex_lock(&command_center_minerals_mutex);
-                    minerals_in_stock >= 50 ? create_scv() : printf("Not enough minerals.\n");
-                    mutex_unlock(&command_center_minerals_mutex);
+                    mutex_lock(&cc_minerals_mutex);
+                    cc_minerals >= 50 ? create_scv() : printf("Not enough minerals.\n");
+                    mutex_unlock(&cc_minerals_mutex);
                 }
                 break;
             case 'q':
@@ -154,18 +136,14 @@ void *user_input(){
 }
 
 void create_soldier(){
-    // mutex_lock(&command_center_minerals_mutex);
-    minerals_in_stock -= 50;
-    // mutex_unlock(&command_center_minerals_mutex);
+    cc_minerals -= 50;
     sleep(1);
     soldiers += 1;
     printf("You wanna piece of me, boy?\n");
 }
 
 void create_scv(){
-    // mutex_lock(&command_center_minerals_mutex);
-    minerals_in_stock -= 50;
-    // mutex_unlock(&command_center_minerals_mutex);
+    cc_minerals -= 50;
     sleep(4);
     create_thread(&scv_threads[scvs], NULL, scv, (void *)(++scvs));
     printf("SCV good to go, sir.\n");
@@ -184,6 +162,16 @@ int hasMinerals(){
     return 0;
 }
 
+int canMine(int* mineral, pthread_mutex_t* mutex){
+    mutex_lock(mutex);
+    if (*mineral < MINERALS){
+        mutex_unlock(mutex);
+        return 1;
+    }
+    mutex_unlock(mutex);
+    return 0;
+}
+
 void init(){
     for (int i = 0; i < MINERAL_BLOCKS; ++i){
         if (pthread_mutex_init(&mineral_block_mutexes[i], NULL) != 0){
@@ -192,13 +180,8 @@ void init(){
             exit(0);
         }
     }
-    if (pthread_mutex_init(&command_center_minerals_mutex, NULL) != 0){
+    if (pthread_mutex_init(&cc_minerals_mutex, NULL) != 0){
         perror("Initializing Command center minerals mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-    if (pthread_mutex_init(&command_center_soldiers_mutex, NULL) != 0){
-        perror("Initializing Command center soldiers mutex");
         pthread_exit(NULL);
         exit(0);
     }
@@ -212,13 +195,8 @@ void outit(){
             exit(0);
         }
     }
-    if (pthread_mutex_destroy(&command_center_minerals_mutex) != 0){
+    if (pthread_mutex_destroy(&cc_minerals_mutex) != 0){
         perror("Destroying Command center minerals mutex");
-        pthread_exit(NULL);
-        exit(0);
-    }
-    if (pthread_mutex_destroy(&command_center_soldiers_mutex) != 0){
-        perror("Destroying Command center soldiers mutex");
         pthread_exit(NULL);
         exit(0);
     }
