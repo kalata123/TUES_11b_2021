@@ -82,20 +82,22 @@ void *scv(void *id){
         for (int i = 0; i < MINERAL_BLOCKS; ++i){
             sleep(3);
             // Step 2 - check if mineral block is empty
-            if (canMine(&mineral_blocks[i], &mineral_block_mutexes[i]) && mutex_trylock(&mineral_block_mutexes[i])){ // !0 == true
+            if (canMine(&mineral_blocks[i], &mineral_block_mutexes[i])){ // !0 == true
                 // Step 3 - dig minerals - 0 sec
-                printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
-                int taken_minerals = (mineral_blocks[i] >= MINERALS - 8) ? MINERALS - mineral_blocks[i] : 8; // should be out of sycle - used in another place, too
-                mineral_blocks[i] += taken_minerals;
-                mutex_unlock(&mineral_block_mutexes[i]);
-                // Step 4 - transporting 2 sec
-                printf("SCV %ld is transporting minerals\n", (long)id);
-                sleep(2);
-                // Step 5 - delivering 0 sec
-                mutex_lock(&cc_minerals_mutex);
-                cc_minerals += taken_minerals;
-                mutex_unlock(&cc_minerals_mutex);
-                printf("SCV %ld delivered minerals to the Command center\n", (long)id);
+                if (mutex_trylock(&mineral_block_mutexes[i])){
+                    printf("SCV %ld is mining from mineral block %d\n", (long)id, i + 1);
+                    int taken_minerals = (mineral_blocks[i] >= MINERALS - 8) ? MINERALS - mineral_blocks[i] : 8; // should be out of sycle - used in another place, too
+                    mineral_blocks[i] += taken_minerals;
+                    mutex_unlock(&mineral_block_mutexes[i]);
+                    // Step 4 - transporting 2 sec
+                    printf("SCV %ld is transporting minerals\n", (long)id);
+                    sleep(2);
+                    // Step 5 - delivering 0 sec
+                    mutex_lock(&cc_minerals_mutex);
+                    cc_minerals += taken_minerals;
+                    mutex_unlock(&cc_minerals_mutex);
+                    printf("SCV %ld delivered minerals to the Command center\n", (long)id);
+                }
             }
         }
     }
