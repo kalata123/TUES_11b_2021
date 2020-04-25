@@ -4,10 +4,16 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 typedef struct dirent dirent_t;
 typedef struct stat stat_t;
+
+char *formatdate(char *str, time_t val) {
+    strftime(str, 36, "%d.%m.%Y %H:%M:%S", localtime(&val));
+    return str;
+}
 
 int main(int argc, char **argv) {
     DIR *dir = opendir(".");
@@ -21,16 +27,38 @@ int main(int argc, char **argv) {
 
     dirent_t *dircontent;
     stat_t statcontent;
-    printf("%-6s %-6s %-10s\n", "uid", "size", "dir name");
+    printf("%-20s", "Access Time");
+    printf("%-6s", "Uid");
+    printf("%-6s", "Size");
+    printf("%-10s\n", "Name");
     while ((dircontent = readdir(dir)) != NULL) {
         if ((strcmp(dircontent->d_name, "..") != 0) && (strcmp(dircontent->d_name, ".") != 0)) {
             if (stat(dircontent->d_name, &statcontent) == -1) {
                 perror("stat");
                 return -1;
             }
-            printf("%-6u ", statcontent.st_uid);
-            printf("%-6ld ", statcontent.st_size);
-            printf("%-10s \n", dircontent->d_name);
+            char str[36];
+            printf("\033[0;34m");
+            printf("%-20s", formatdate(str, statcontent.st_atime));
+            printf("\033[0m");
+
+            printf("\033[0;31m");
+            printf("%-6u", statcontent.st_uid);
+            printf("\033[0m");
+
+            printf("\033[0;32m");
+            printf("%-6ld", statcontent.st_size);
+            printf("\033[0m");
+
+            if (S_ISDIR(statcontent.st_mode)) {
+                printf("\033[1;32m");
+                printf("%-10s\n", dircontent->d_name);
+                printf("\033[0m");
+            } else {
+                printf("\033[0;33m");
+                printf("%-10s\n", dircontent->d_name);
+                printf("\033[0m");
+            }
         }
     }
 
