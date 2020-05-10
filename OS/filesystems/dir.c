@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <grp.h>
+#include <libgen.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,14 +33,18 @@ int main(int argc, char **argv) {
         for (int i = 1; i < argc; ++i) {
             if (argv[i][0] != '-') {
                 val = 0;
-                if ((dir = opendir(argv[i])) == NULL) {
-                    perror("opendir");
-                    return -1;
+                char str[200];
+                getcwd(str, sizeof(str));
+                strcat(str, "/");
+                strcat(str, argv[i]);
+                if ((dir = opendir(str)) == NULL) {
+                    char *str = "ls: cannot open directory '%s':", argv[i];
+                    perror(str);
                 }
-                scan_dir(dir, argc, argv, ".");
+                scan_dir(dir, argc, argv, basename(str));
                 if (closedir(dir) == -1) {
-                    perror("closedir");
-                    return -1;
+                    char *str = "ls: cannot close directory '%s':", argv[i];
+                    perror(str);
                 }
             } else {
                 val = 1;
@@ -47,10 +52,19 @@ int main(int argc, char **argv) {
         }
     }
     if (val) {
-        dir = opendir(".");
-        scan_dir(dir, argc, argv, ".");
+        char str[200];
+        getcwd(str, sizeof(str));
+        strcat(str, "/");
+        strcat(str, ".");
+        if ((dir = opendir(str)) == NULL) {
+            char *str = "ls: cannot open directory '.':";
+            perror(str);
+            return -1;
+        }
+        scan_dir(dir, argc, argv, basename(str));
         if (closedir(dir) == -1) {
-            perror("closedir");
+            char *str = "ls: cannot close directory '.':";
+            perror(str);
             return -1;
         }
     }
@@ -90,11 +104,15 @@ int scan_dir(DIR *dir, int argc, char **argv, char *name) {
         printf("%s:\n", name);
     }
     dirent_t *dirinfo;
+
     errno = 0;
     while ((dirinfo = readdir(dir)) != NULL) {
         stat_t statinfo;
         if (stat(dirinfo->d_name, &statinfo) == -1) {
-            perror("stat");
+            char *str = "ls: cannot access '";
+            strcat(str, dirinfo->d_name);
+            strcat(str, "':");
+            perror(str);
             return -1;
         }
 
@@ -150,7 +168,11 @@ int scan_dir(DIR *dir, int argc, char **argv, char *name) {
         printf("%s\n", dirinfo->d_name);
     }
     if (errno) {
-        perror("readdir");
+        char *str = "ls: cannot read directory '";
+        strcat(str, dirinfo->d_name);
+        strcat(str, "':");
+        perror(str);
+        return -1;
     }
 
     if (is_chr_in_str(flags, 'l')) {
